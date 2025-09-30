@@ -1,0 +1,105 @@
+model Category {
+  id           String  @id @default(cuid())
+  name         String
+  description  String?
+  displayOrder Int     @default(0)
+  isActive     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items Item[]
+
+  @@map("categories")
+}
+
+model Item {
+  id         String @id @default(cuid())
+  categoryId String
+
+  // Basic Info
+  name        String
+  description String?
+  price       Float
+
+  // Display & Media
+  imageUrl     String?
+  displayOrder Int     @default(0)
+
+  // Availability & Status
+  isAvailable Boolean @default(true)
+  isActive    Boolean @default(true)
+
+  // Additional Info
+  calories   Int?
+  prepTime   Int? // in minutes
+  spicyLevel Int? // 0-5 scale
+
+  // Dietary & Allergens
+  isVegetarian Boolean @default(false)
+  isVegan      Boolean @default(false)
+  isGlutenFree Boolean @default(false)
+  allergens    String? // JSON array: ["nuts", "dairy", "eggs"]
+
+  // Inventory (optional)
+  stockCount    Int?
+  lowStockAlert Int? @default(5)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  category       Category            @relation(fields: [categoryId], references: [id])
+  modifierGroups ItemModifierGroup[]
+
+  @@map("items")
+}
+
+model ModifierGroup {
+  id           String  @id @default(cuid())
+  name         String
+  description  String?
+  isRequired   Boolean @default(false)
+  minSelection Int     @default(0)
+  maxSelection Int? // null = unlimited
+  displayOrder Int     @default(0)
+  isActive     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  modifiers Modifier[]
+  items     ItemModifierGroup[]
+
+  @@map("modifier_groups")
+}
+
+model Modifier {
+  id              String  @id @default(cuid())
+  modifierGroupId String
+  name            String
+  priceAdjustment Float   @default(0) // +/- price change
+  displayOrder    Int     @default(0)
+  isAvailable     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  modifierGroup ModifierGroup @relation(fields: [modifierGroupId], references: [id])
+
+  @@map("modifiers")
+}
+
+// Junction table for items and modifier groups
+model ItemModifierGroup {
+  id              String @id @default(cuid())
+  itemId          String
+  modifierGroupId String
+
+  item          Item          @relation(fields: [itemId], references: [id])
+  modifierGroup ModifierGroup @relation(fields: [modifierGroupId], references: [id])
+
+  @@unique([itemId, modifierGroupId])
+  @@map("item_modifier_groups")
+}

@@ -1,0 +1,49 @@
+model Order {
+  id          String @id @default(cuid())
+  orderNumber Int    @unique @default(autoincrement())
+
+  customerPhone String
+  customerName  String?
+
+  location String? // POSTGIS POINT
+  address  String? // Reverse geocoded address for display
+
+  total    Float
+  subtotal Float
+  tax      Float @default(0)
+  tip      Float @default(0)
+
+  status    String   @default("pending") // pending, confirmed, preparing, ready, delivered, cancelled
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  itemId  String
+
+  // Item details at time of order (for historical accuracy)
+  itemName     String
+  itemPrice    Float
+  quantity     Int
+  specialNotes String?
+
+  // Calculated totals
+  unitPrice  Float
+  totalPrice Float
+
+  // Selected modifiers (stored as JSON)
+  selectedModifiers String? // JSON: [{"groupId": "...", "modifierId": "...", "name": "Extra Cheese", "price": 2.00}]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}

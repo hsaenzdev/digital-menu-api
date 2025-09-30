@@ -1,0 +1,20 @@
+model Customer {
+  id String @id @default(cuid())
+
+  phoneNumber String  @unique
+  name        String?
+  email       String?
+
+  // Delivery preferences
+  defaultAddress  String?
+  defaultLocation String? // POSTGIS POINT
+
+  // Customer info
+  birthday DateTime?
+  isActive Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("customers")
+}
