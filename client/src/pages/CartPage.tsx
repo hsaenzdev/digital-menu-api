@@ -2,11 +2,13 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCustomer } from '../context/CustomerContext'
 import { useCart } from '../context/CartContext'
+import { useActiveOrders } from '../hooks/useActiveOrders'
 
 export const CartPage: React.FC = () => {
   const navigate = useNavigate()
   const { customer, location } = useCustomer()
   const { cart, updateItem, removeItem, clearCart, updateTip } = useCart()
+  const { hasActiveOrders, activeOrders } = useActiveOrders()
   
   const [tipPercentage, setTipPercentage] = useState<number>(15)
   const [customTip, setCustomTip] = useState<string>('')
@@ -229,12 +231,33 @@ export const CartPage: React.FC = () => {
                 Continue Shopping
               </button>
               
-              <button 
-                className="checkout-btn"
-                onClick={handleProceedToCheckout}
-              >
-                Proceed to Checkout →
-              </button>
+              {hasActiveOrders ? (
+                <div className="blocked-checkout">
+                  <button 
+                    className="checkout-btn disabled"
+                    disabled
+                    title="You have active orders. Please wait for them to complete."
+                  >
+                    🔒 Checkout Unavailable
+                  </button>
+                  <p className="checkout-message">
+                    ⚠️ You have {activeOrders.length} active order{activeOrders.length > 1 ? 's' : ''}. 
+                    <button 
+                      className="view-orders-link"
+                      onClick={() => navigate('/orders')}
+                    >
+                      View Orders
+                    </button>
+                  </p>
+                </div>
+              ) : (
+                <button 
+                  className="checkout-btn"
+                  onClick={handleProceedToCheckout}
+                >
+                  Proceed to Checkout →
+                </button>
+              )}
             </div>
           </>
         )}

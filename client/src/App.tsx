@@ -6,6 +6,7 @@ import { MenuPage } from './pages/MenuPage'
 import { CartPage } from './pages/CartPage'
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage'
 import { OrderStatusPage } from './pages/OrderStatusPage'
+import { OrderHistoryPage } from './pages/OrderHistoryPage'
 import { DebugPage } from './pages/DebugPage'
 import { CartProvider } from './context/CartContext'
 import { CustomerProvider } from './context/CustomerContext'
@@ -24,7 +25,8 @@ function App() {
               <Route path="/menu" element={<MenuPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-              <Route path="/order-status/:orderNumber" element={<OrderStatusPage />} />
+              <Route path="/order-status/:orderId" element={<OrderStatusPage />} />
+              <Route path="/orders" element={<OrderHistoryPage />} />
               <Route path="/debug" element={<DebugPage />} />
             </Routes>
           </div>

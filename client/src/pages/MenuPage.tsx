@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCustomer } from '../context/CustomerContext'
 import { useCart } from '../context/CartContext'
+import { useActiveOrders } from '../hooks/useActiveOrders'
 import { ModifierSelectionModal } from '../components/ModifierSelectionModal'
 import type { MenuCategory, MenuItem, CartItem, ApiResponse, SelectedModifier } from '../types'
 
@@ -9,6 +10,7 @@ export const MenuPage: React.FC = () => {
   const navigate = useNavigate()
   const { customer, location } = useCustomer()
   const { addItem, getItemCount } = useCart()
+  const { hasActiveOrders, activeOrders } = useActiveOrders()
   
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [items, setItems] = useState<MenuItem[]>([])
@@ -177,6 +179,25 @@ export const MenuPage: React.FC = () => {
           {location && <span className="customer-location">📍 {location.address}</span>}
         </div>
       </div>
+
+      {/* Active Orders Warning Banner */}
+      {hasActiveOrders && (
+        <div className="active-orders-banner">
+          <div className="banner-content">
+            <div className="banner-icon">⚠️</div>
+            <div className="banner-text">
+              <h4>Active Order{activeOrders.length > 1 ? 's' : ''} in Progress</h4>
+              <p>You have {activeOrders.length} active order{activeOrders.length > 1 ? 's' : ''}. Browse the menu, but wait for current orders to complete before placing a new one.</p>
+            </div>
+            <button 
+              className="view-orders-btn"
+              onClick={() => navigate('/orders')}
+            >
+              View Orders
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="error-message">

@@ -73,37 +73,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
     }
   })
 
-  // Get order by ID
-  .get('/:orderId', async ({ params: { orderId } }) => {
-    try {
-      const order = await prisma.order.findUnique({
-        where: { id: orderId },
-        include: {
-          items: true
-        }
-      })
-
-      if (!order) {
-        return {
-          success: false,
-          error: 'Order not found'
-        }
-      }
-
-      return {
-        success: true,
-        data: parseOrderData(order)
-      }
-    } catch (error) {
-      console.error('Error fetching order:', error)
-      return {
-        success: false,
-        error: 'Failed to fetch order'
-      }
-    }
-  })
-
-  // Get order by order number
+  // Get order by order number (specific route first)
   .get('/number/:orderNumber', async ({ params: { orderNumber } }) => {
     try {
       const order = await prisma.order.findUnique({
@@ -133,7 +103,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
     }
   })
 
-  // Get orders by phone number
+  // Get orders by phone number (specific route)
   .get('/customer/:phone', async ({ params: { phone } }) => {
     try {
       const orders = await prisma.order.findMany({
@@ -149,10 +119,40 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         data: orders.map(order => parseOrderData(order))
       }
     } catch (error) {
-      console.error('Error fetching customer orders:', error)
+      console.error('Error fetching orders:', error)
       return {
         success: false,
-        error: 'Failed to fetch customer orders'
+        error: 'Failed to fetch orders'
+      }
+    }
+  })
+
+  // Get order by ID (generic route last)
+  .get('/:orderId', async ({ params: { orderId } }) => {
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          items: true
+        }
+      })
+
+      if (!order) {
+        return {
+          success: false,
+          error: 'Order not found'
+        }
+      }
+
+      return {
+        success: true,
+        data: parseOrderData(order)
+      }
+    } catch (error) {
+      console.error('Error fetching order:', error)
+      return {
+        success: false,
+        error: 'Failed to fetch order'
       }
     }
   })

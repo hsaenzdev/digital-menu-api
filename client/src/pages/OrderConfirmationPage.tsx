@@ -282,15 +282,15 @@ export const OrderConfirmationPage: React.FC = () => {
           <div className="confirmation-actions">
             <button 
               className="track-order-btn"
-              onClick={() => navigate(`/order-status/${submittedOrder.id}`)}
+              onClick={() => navigate('/orders')}
             >
-              Track Your Order
+              View All Orders
             </button>
             <button 
               className="new-order-btn"
-              onClick={() => navigate('/welcome')}
+              onClick={() => navigate('/menu')}
             >
-              Place Another Order
+              Continue Shopping
             </button>
           </div>
         </div>
