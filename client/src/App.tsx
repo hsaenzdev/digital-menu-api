@@ -1,34 +1,36 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { WelcomePage } from './pages/WelcomePage'
+import { LocationPage } from './pages/LocationPage'
+import { CustomerInfoPage } from './pages/CustomerInfoPage'
+import { MenuPage } from './pages/MenuPage'
+import { CartPage } from './pages/CartPage'
+import { OrderConfirmationPage } from './pages/OrderConfirmationPage'
+import { OrderStatusPage } from './pages/OrderStatusPage'
+import { DebugPage } from './pages/DebugPage'
+import { CartProvider } from './context/CartContext'
+import { CustomerProvider } from './context/CustomerContext'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <CustomerProvider>
+      <CartProvider>
+        <Router>
+          <div className="app">
+            <Routes>
+              <Route path="/:customerId" element={<WelcomePage />} />
+              <Route path="/location" element={<LocationPage />} />
+              <Route path="/customer-info" element={<CustomerInfoPage />} />
+              <Route path="/menu" element={<MenuPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+              <Route path="/order-status/:orderNumber" element={<OrderStatusPage />} />
+              <Route path="/debug" element={<DebugPage />} />
+            </Routes>
+          </div>
+        </Router>
+      </CartProvider>
+    </CustomerProvider>
   )
 }
 

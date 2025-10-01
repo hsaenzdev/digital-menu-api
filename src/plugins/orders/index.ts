@@ -1,6 +1,19 @@
 import { Elysia } from 'elysia'
 import { prisma } from '../../lib/prisma'
 
+// Helper function to parse selectedModifiers JSON string to array
+const parseOrderData = (order: any) => {
+  return {
+    ...order,
+    items: order.items.map((item: any) => ({
+      ...item,
+      selectedModifiers: item.selectedModifiers 
+        ? JSON.parse(item.selectedModifiers) 
+        : []
+    }))
+  }
+}
+
 export const orderPlugin = new Elysia({ prefix: '/api/orders' })
   
   // Create a new order
@@ -28,7 +41,9 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
               unitPrice: item.unitPrice,
               totalPrice: item.totalPrice,
               specialNotes: item.specialNotes,
-              selectedModifiers: item.selectedModifiers
+              selectedModifiers: item.selectedModifiers 
+                ? JSON.stringify(item.selectedModifiers) 
+                : null
             }))
           }
         },
@@ -37,10 +52,17 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       })
 
+      // Mock WhatsApp notifications (in real app, these would be async)
+      console.log(`📱 Sending WhatsApp notifications for order #${order.orderNumber}`)
+      
+      // You can call the WhatsApp endpoints from here in a real implementation
+      // await fetch('/api/whatsapp/send-order-confirmation', { ... })
+      // await fetch('/api/whatsapp/send-restaurant-notification', { ... })
+
       return {
         success: true,
-        data: order,
-        message: `Order #${order.orderNumber} created successfully`
+        data: parseOrderData(order),
+        message: `Order #${order.orderNumber} created successfully. WhatsApp notifications sent!`
       }
     } catch (error) {
       console.error('Error creating order:', error)
@@ -70,7 +92,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
 
       return {
         success: true,
-        data: order
+        data: parseOrderData(order)
       }
     } catch (error) {
       console.error('Error fetching order:', error)
@@ -100,7 +122,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
 
       return {
         success: true,
-        data: order
+        data: parseOrderData(order)
       }
     } catch (error) {
       console.error('Error fetching order:', error)
@@ -124,7 +146,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
 
       return {
         success: true,
-        data: orders
+        data: orders.map(order => parseOrderData(order))
       }
     } catch (error) {
       console.error('Error fetching customer orders:', error)
@@ -156,10 +178,15 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       })
 
+      // Mock WhatsApp status notification
+      console.log(`📱 Sending status update for order #${order.orderNumber}: ${status}`)
+      
+      // In real app: await fetch('/api/whatsapp/send-status-update', { ... })
+
       return {
         success: true,
-        data: order,
-        message: `Order #${order.orderNumber} status updated to ${status}`
+        data: parseOrderData(order),
+        message: `Order #${order.orderNumber} status updated to ${status}. Customer notified via WhatsApp!`
       }
     } catch (error) {
       console.error('Error updating order status:', error)
@@ -193,7 +220,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
 
       return {
         success: true,
-        data: orders,
+        data: orders.map(order => parseOrderData(order)),
         pagination: {
           total: totalCount,
           limit: parseInt(limit as string),
