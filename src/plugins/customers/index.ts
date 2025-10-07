@@ -52,14 +52,19 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
         }
       }
 
+      // Format location if provided (expecting "lat,lon" format)
+      const formattedData: any = {}
+      if (updateData.name) formattedData.name = updateData.name
+      if (updateData.email) formattedData.email = updateData.email
+      if (updateData.defaultAddress) formattedData.defaultAddress = updateData.defaultAddress
+      if (updateData.defaultLocation) {
+        // Store as "latitude,longitude" string
+        formattedData.defaultLocation = updateData.defaultLocation
+      }
+
       const customer = await prisma.customer.update({
         where: { id: customerId },
-        data: {
-          ...(updateData.name && { name: updateData.name }),
-          ...(updateData.email && { email: updateData.email }),
-          ...(updateData.defaultAddress && { defaultAddress: updateData.defaultAddress }),
-          ...(updateData.defaultLocation && { defaultLocation: updateData.defaultLocation }),
-        }
+        data: formattedData
       })
 
       return {
@@ -186,12 +191,12 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
           where: { id: existingCustomer.id },
           data: {
             platform,
-            phoneNumber,
-            messengerPsid,
-            name: customerData.name,
-            email: customerData.email,
-            defaultAddress: customerData.defaultAddress,
-            defaultLocation: customerData.defaultLocation,
+            ...(phoneNumber && { phoneNumber }),
+            ...(messengerPsid && { messengerPsid }),
+            ...(customerData.name && { name: customerData.name }),
+            ...(customerData.email && { email: customerData.email }),
+            ...(customerData.defaultAddress && { defaultAddress: customerData.defaultAddress }),
+            ...(customerData.defaultLocation && { defaultLocation: customerData.defaultLocation }),
           }
         })
       } else {
@@ -199,12 +204,12 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
         customer = await prisma.customer.create({
           data: {
             platform,
-            phoneNumber,
-            messengerPsid,
-            name: customerData.name,
-            email: customerData.email,
-            defaultAddress: customerData.defaultAddress,
-            defaultLocation: customerData.defaultLocation,
+            ...(phoneNumber && { phoneNumber }),
+            ...(messengerPsid && { messengerPsid }),
+            ...(customerData.name && { name: customerData.name }),
+            ...(customerData.email && { email: customerData.email }),
+            ...(customerData.defaultAddress && { defaultAddress: customerData.defaultAddress }),
+            ...(customerData.defaultLocation && { defaultLocation: customerData.defaultLocation }),
           }
         })
       }
