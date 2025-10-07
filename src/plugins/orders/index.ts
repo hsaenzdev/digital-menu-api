@@ -21,10 +21,29 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
     try {
       const orderData = body as any
 
+      // Platform-specific validation
+      const platform = orderData.platform || 'whatsapp'
+      
+      if (platform === 'whatsapp' && !orderData.customerPhone) {
+        return {
+          success: false,
+          error: 'Customer phone is required for WhatsApp orders'
+        }
+      }
+
+      if (platform === 'messenger' && !orderData.messengerPsid) {
+        return {
+          success: false,
+          error: 'Messenger PSID is required for Messenger orders'
+        }
+      }
+
       // Create the order
       const order = await prisma.order.create({
         data: {
+          platform,
           customerPhone: orderData.customerPhone,
+          messengerPsid: orderData.messengerPsid,
           customerName: orderData.customerName,
           location: orderData.location,
           address: orderData.address,
@@ -52,17 +71,22 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       })
 
-      // Mock WhatsApp notifications (in real app, these would be async)
-      console.log(`📱 Sending WhatsApp notifications for order #${order.orderNumber}`)
+      // Platform-specific notifications
+      const platformEmoji = platform === 'whatsapp' ? '📱' : '💙'
+      const platformName = platform === 'whatsapp' ? 'WhatsApp' : 'Messenger'
+      console.log(`${platformEmoji} Sending ${platformName} notifications for order #${order.orderNumber}`)
       
-      // You can call the WhatsApp endpoints from here in a real implementation
-      // await fetch('/api/whatsapp/send-order-confirmation', { ... })
-      // await fetch('/api/whatsapp/send-restaurant-notification', { ... })
+      // You can call the platform-specific endpoints from here in a real implementation
+      // if (platform === 'whatsapp') {
+      //   await fetch('/api/whatsapp/send-order-confirmation', { ... })
+      // } else {
+      //   await fetch('/api/messenger/send-order-confirmation', { ... })
+      // }
 
       return {
         success: true,
         data: parseOrderData(order),
-        message: `Order #${order.orderNumber} created successfully. WhatsApp notifications sent!`
+        message: `Order #${order.orderNumber} created successfully. ${platformName} notifications sent!`
       }
     } catch (error) {
       console.error('Error creating order:', error)
@@ -107,7 +131,37 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
   .get('/customer/:phone', async ({ params: { phone } }) => {
     try {
       const orders = await prisma.order.findMany({
-        where: { customerPhone: phone },
+        where: { 
+          customerPhone: phone,
+          platform: 'whatsapp'
+        },
+        include: {
+          items: true
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      return {
+        success: true,
+        data: orders.map(order => parseOrderData(order))
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+      return {
+        success: false,
+        error: 'Failed to fetch orders'
+      }
+    }
+  })
+
+  // Get orders by Messenger PSID (specific route)
+  .get('/messenger/:psid', async ({ params: { psid } }) => {
+    try {
+      const orders = await prisma.order.findMany({
+        where: { 
+          messengerPsid: psid,
+          platform: 'messenger'
+        },
         include: {
           items: true
         },

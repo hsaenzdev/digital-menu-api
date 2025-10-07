@@ -79,29 +79,46 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
   // Validate customer before allowing order - this is the key endpoint
   .post('/validate', async ({ body }) => {
     try {
-      const { phoneNumber } = body as any
+      const { platform = 'whatsapp', phoneNumber, messengerPsid } = body as any
 
-      if (!phoneNumber) {
+      // Platform-specific validation
+      if (platform === 'whatsapp' && !phoneNumber) {
         return {
           success: false,
-          error: 'Phone number is required'
+          error: 'Phone number is required for WhatsApp platform'
         }
       }
 
-      // Check if customer exists
-      const customer = await prisma.customer.findUnique({
-        where: { phoneNumber }
-      })
-
-      // Check for pending orders
-      const pendingOrders = await prisma.order.findMany({
-        where: {
-          customerPhone: phoneNumber,
-          status: { in: ['pending', 'confirmed', 'preparing'] }
+      if (platform === 'messenger' && !messengerPsid) {
+        return {
+          success: false,
+          error: 'Messenger PSID is required for Messenger platform'
         }
+      }
+
+      // Check if customer exists based on platform
+      const customer = await prisma.customer.findUnique({
+        where: platform === 'whatsapp' 
+          ? { phoneNumber } 
+          : { messengerPsid }
       })
 
-      // Check if customer is blocked (we'll add this field to customer schema later)
+      // Check for pending orders based on platform
+      const pendingOrders = await prisma.order.findMany({
+        where: platform === 'whatsapp'
+          ? {
+              customerPhone: phoneNumber,
+              platform: 'whatsapp',
+              status: { in: ['pending', 'confirmed', 'preparing'] }
+            }
+          : {
+              messengerPsid,
+              platform: 'messenger',
+              status: { in: ['pending', 'confirmed', 'preparing'] }
+            }
+      })
+
+      // Check if customer is blocked
       const isBlocked = customer?.isActive === false
 
       return {
@@ -138,19 +155,39 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
   // Create or update customer
   .post('/', async ({ body }) => {
     try {
-      const customerData = body as any
+      const { platform = 'whatsapp', phoneNumber, messengerPsid, ...customerData } = body as any
 
-      // Check if customer exists by phone
+      // Platform-specific validation
+      if (platform === 'whatsapp' && !phoneNumber) {
+        return {
+          success: false,
+          error: 'Phone number is required for WhatsApp customers'
+        }
+      }
+
+      if (platform === 'messenger' && !messengerPsid) {
+        return {
+          success: false,
+          error: 'Messenger PSID is required for Messenger customers'
+        }
+      }
+
+      // Check if customer exists based on platform
       const existingCustomer = await prisma.customer.findUnique({
-        where: { phoneNumber: customerData.phoneNumber }
+        where: platform === 'whatsapp' 
+          ? { phoneNumber } 
+          : { messengerPsid }
       })
 
       let customer
       if (existingCustomer) {
         // Update existing customer
         customer = await prisma.customer.update({
-          where: { phoneNumber: customerData.phoneNumber },
+          where: { id: existingCustomer.id },
           data: {
+            platform,
+            phoneNumber,
+            messengerPsid,
             name: customerData.name,
             email: customerData.email,
             defaultAddress: customerData.defaultAddress,
@@ -161,7 +198,9 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
         // Create new customer
         customer = await prisma.customer.create({
           data: {
-            phoneNumber: customerData.phoneNumber,
+            platform,
+            phoneNumber,
+            messengerPsid,
             name: customerData.name,
             email: customerData.email,
             defaultAddress: customerData.defaultAddress,
@@ -211,6 +250,33 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
     }
   })
 
+  // Get customer by Messenger PSID
+  .get('/messenger/:psid', async ({ params: { psid } }) => {
+    try {
+      const customer = await prisma.customer.findUnique({
+        where: { messengerPsid: psid }
+      })
+
+      if (!customer) {
+        return {
+          success: false,
+          error: 'Customer not found'
+        }
+      }
+
+      return {
+        success: true,
+        data: customer
+      }
+    } catch (error) {
+      console.error('Error fetching customer:', error)
+      return {
+        success: false,
+        error: 'Failed to fetch customer'
+      }
+    }
+  })
+
   // Get customer orders
   .get('/:customerId/orders', async ({ params: { customerId } }) => {
     try {
@@ -225,8 +291,11 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
         }
       }
 
+      // Query orders based on customer's platform
       const orders = await prisma.order.findMany({
-        where: { customerPhone: customer.phoneNumber },
+        where: customer.platform === 'whatsapp'
+          ? { customerPhone: customer.phoneNumber, platform: 'whatsapp' }
+          : { messengerPsid: customer.messengerPsid, platform: 'messenger' },
         include: {
           items: true
         },

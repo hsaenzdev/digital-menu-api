@@ -1,9 +1,15 @@
 model Customer {
   id String @id @default(cuid())
 
-  phoneNumber String  @unique
-  name        String?
-  email       String?
+  // Platform: each customer belongs to ONE platform only
+  platform String @default("whatsapp") // 'whatsapp' | 'messenger'
+
+  // Platform-specific identifiers (only ONE will be set)
+  phoneNumber   String? @unique // For WhatsApp customers
+  messengerPsid String? @unique // For Messenger customers (Page-Scoped ID)
+
+  name  String?
+  email String?
 
   // Delivery preferences
   defaultAddress  String?

@@ -2,8 +2,14 @@ model Order {
   id          String @id @default(cuid())
   orderNumber Int    @unique @default(autoincrement())
 
-  customerPhone String
-  customerName  String?
+  // Platform: tracks which platform this order came from
+  platform String @default("whatsapp") // 'whatsapp' | 'messenger'
+
+  // Platform-specific identifiers (matches customer's platform)
+  customerPhone String? // For WhatsApp orders
+  messengerPsid String? // For Messenger orders
+
+  customerName String?
 
   location String? // POSTGIS POINT
   address  String? // Reverse geocoded address for display
