@@ -38,14 +38,13 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       }
 
-      // Create the order
+      // Create the order (without location first)
       const order = await prisma.order.create({
         data: {
           platform,
           customerPhone: orderData.customerPhone,
           messengerPsid: orderData.messengerPsid,
           customerName: orderData.customerName,
-          location: orderData.location,
           address: orderData.address,
           subtotal: orderData.subtotal,
           tax: orderData.tax,
@@ -70,6 +69,18 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
           items: true
         }
       })
+
+      // Update location separately if provided (expecting "lat,lon" format)
+      if (orderData.location) {
+        const [lat, lon] = orderData.location.split(',').map((n: string) => parseFloat(n.trim()))
+        if (!isNaN(lat) && !isNaN(lon)) {
+          // Use raw SQL to update PostGIS Point (lon, lat order for PostGIS)
+          await prisma.$executeRawUnsafe(
+            `UPDATE orders SET location = ST_GeomFromText('POINT(${lon} ${lat})', 4326) WHERE id = $1`,
+            order.id
+          )
+        }
+      }
 
       // Platform-specific notifications
       const platformEmoji = platform === 'whatsapp' ? '📱' : '💙'

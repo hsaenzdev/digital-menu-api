@@ -13,7 +13,7 @@ model Customer {
 
   // Delivery preferences
   defaultAddress  String?
-  defaultLocation String? // POSTGIS POINT
+  defaultLocation Unsupported("geometry(Point, 4326)")?
 
   // Customer info
   birthday DateTime?

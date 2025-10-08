@@ -11,7 +11,7 @@ model Order {
 
   customerName String?
 
-  location String? // POSTGIS POINT
+  location Unsupported("geometry(Point, 4326)")?
   address  String? // Reverse geocoded address for display
 
   total    Float
