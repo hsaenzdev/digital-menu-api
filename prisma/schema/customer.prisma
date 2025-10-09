@@ -11,10 +11,6 @@ model Customer {
   name  String?
   email String?
 
-  // Delivery preferences
-  defaultAddress  String?
-  defaultLocation Unsupported("geometry(Point, 4326)")?
-
   // Customer info
   birthday DateTime?
   isActive Boolean   @default(true)

@@ -479,13 +479,11 @@ async function seed() {
   // Create Sample Customers
   console.log('👥 Creating sample customers...')
   
-  // Create customers without location first
   const customer1 = await prisma.customer.create({
     data: {
       phoneNumber: '+1234567890',
       name: 'John Doe',
       email: 'john.doe@email.com',
-      defaultAddress: '123 Main St, Anytown, ST 12345',
       isActive: true,
     },
   })
@@ -495,7 +493,6 @@ async function seed() {
       phoneNumber: '+1987654321',
       name: 'Jane Smith',
       email: 'jane.smith@email.com',
-      defaultAddress: '456 Oak Ave, Somewhere, ST 67890',
       isActive: true,
     },
   })
@@ -508,20 +505,6 @@ async function seed() {
       isActive: true,
     },
   })
-
-  // Update customers with PostGIS Points using raw SQL
-  // Note: PostGIS uses (longitude, latitude) order, not (lat, lon)
-  await prisma.$executeRaw`
-    UPDATE customers 
-    SET "defaultLocation" = ST_GeomFromText('POINT(-73.935242 40.730610)', 4326)
-    WHERE id = ${customer1.id}
-  `
-
-  await prisma.$executeRaw`
-    UPDATE customers 
-    SET "defaultLocation" = ST_GeomFromText('POINT(-73.945242 40.740610)', 4326)
-    WHERE id = ${customer2.id}
-  `
 
   // Set auto-increment for order numbers to start from 1000
   console.log('🔢 Setting order numbers to start from 1000...')

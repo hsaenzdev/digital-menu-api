@@ -52,29 +52,16 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
         }
       }
 
-      // Build update data (without location)
+      // Build update data
       const formattedData: any = {}
       if (updateData.name) formattedData.name = updateData.name
       if (updateData.email) formattedData.email = updateData.email
-      if (updateData.defaultAddress) formattedData.defaultAddress = updateData.defaultAddress
       
-      // Update other fields using Prisma
+      // Update customer using Prisma
       const customer = await prisma.customer.update({
         where: { id: customerId },
         data: formattedData
       })
-
-      // Update location separately if provided (expecting "lat,lon" format)
-      if (updateData.defaultLocation) {
-        const [lat, lon] = updateData.defaultLocation.split(',').map((n: string) => parseFloat(n.trim()))
-        if (!isNaN(lat) && !isNaN(lon)) {
-          // Use raw SQL to update PostGIS Point (lon, lat order for PostGIS)
-          await prisma.$executeRawUnsafe(
-            `UPDATE customers SET "defaultLocation" = ST_GeomFromText('POINT(${lon} ${lat})', 4326) WHERE id = $1`,
-            customerId
-          )
-        }
-      }
 
       return {
         success: true,
@@ -193,14 +180,13 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
           : { messengerPsid }
       })
 
-      // Prepare base data without location
+      // Prepare base data
       const baseData: any = {
         platform,
         ...(phoneNumber && { phoneNumber }),
         ...(messengerPsid && { messengerPsid }),
         ...(customerData.name && { name: customerData.name }),
         ...(customerData.email && { email: customerData.email }),
-        ...(customerData.defaultAddress && { defaultAddress: customerData.defaultAddress }),
       }
 
       let customer
@@ -210,33 +196,11 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
           where: { id: existingCustomer.id },
           data: baseData
         })
-        
-        // Update location separately if provided
-        if (customerData.defaultLocation) {
-          const [lat, lon] = customerData.defaultLocation.split(',').map((n: string) => parseFloat(n.trim()))
-          if (!isNaN(lat) && !isNaN(lon)) {
-            await prisma.$executeRawUnsafe(
-              `UPDATE customers SET "defaultLocation" = ST_GeomFromText('POINT(${lon} ${lat})', 4326) WHERE id = $1`,
-              customer.id
-            )
-          }
-        }
       } else {
         // Create new customer
         customer = await prisma.customer.create({
           data: baseData
         })
-        
-        // Update location separately if provided
-        if (customerData.defaultLocation) {
-          const [lat, lon] = customerData.defaultLocation.split(',').map((n: string) => parseFloat(n.trim()))
-          if (!isNaN(lat) && !isNaN(lon)) {
-            await prisma.$executeRawUnsafe(
-              `UPDATE customers SET "defaultLocation" = ST_GeomFromText('POINT(${lon} ${lat})', 4326) WHERE id = $1`,
-              customer.id
-            )
-          }
-        }
       }
 
       return {
