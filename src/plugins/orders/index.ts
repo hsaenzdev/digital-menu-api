@@ -82,17 +82,10 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       }
 
-      // Platform-specific notifications
+      // Platform-specific notifications (mock for now)
       const platformEmoji = platform === 'whatsapp' ? '📱' : '💙'
       const platformName = platform === 'whatsapp' ? 'WhatsApp' : 'Messenger'
       console.log(`${platformEmoji} Sending ${platformName} notifications for order #${order.orderNumber}`)
-      
-      // You can call the platform-specific endpoints from here in a real implementation
-      // if (platform === 'whatsapp') {
-      //   await fetch('/api/whatsapp/send-order-confirmation', { ... })
-      // } else {
-      //   await fetch('/api/messenger/send-order-confirmation', { ... })
-      // }
 
       return {
         success: true,

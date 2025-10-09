@@ -21,14 +21,9 @@ export const geocodingPlugin = new Elysia({ prefix: "/api/geocoding" })
         }
 
         const data = await response.json();
-        
-        // Log what we got from geocode.xyz
-        console.log('Geocode.xyz reverse geocoding result:');
-        console.log('Response:', JSON.stringify(data, null, 2));
 
         // Check for errors
         if (data.error) {
-          console.log('Geocode.xyz error:', data.error);
           set.status = 400;
           return {
             error: data.error.description || "Geocoding failed",

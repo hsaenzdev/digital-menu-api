@@ -7,7 +7,6 @@ import { adminPlugin } from "./plugins/admin";
 import { whatsappPlugin } from "./plugins/whatsapp";
 import { geocodingPlugin } from "./plugins/geocoding";
 import { cors } from "@elysiajs/cors";
-import { bearer } from "@elysiajs/bearer";
 import { serverTiming } from "@elysiajs/server-timing";
 import { staticPlugin } from "@elysiajs/static";
 import { PORT } from "./config/env";
@@ -21,7 +20,6 @@ const app = new Elysia()
   )
   .use(serverTiming())
   .use(cors())
-  .use(bearer())
   .use(healthRoutes)
   .use(menuPlugin)
   .use(orderPlugin)
