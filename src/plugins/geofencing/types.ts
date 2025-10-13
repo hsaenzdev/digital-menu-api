@@ -15,16 +15,22 @@ export interface ValidationResult {
   }
 }
 
-export interface GeoJSONFeature {
-  type: string
-  properties: Record<string, any>
-  geometry: {
-    type: string
-    coordinates: number[][][] | number[][][][]
-  }
+export interface ZoneInfo {
+  id: string
+  name: string
+  description: string | null
 }
 
-export interface GeoJSONFeatureCollection {
-  type: string
-  features: GeoJSONFeature[]
+export interface ZoneValidationResult {
+  isValid: boolean
+  withinDeliveryZone: boolean
+  reason: 'WITHIN_DELIVERY_ZONE' | 'OUTSIDE_DELIVERY_ZONE' | 'OUTSIDE_CITY'
+  message: string
+  city: {
+    id: string
+    name: string
+    country: string
+    state: string | null
+  } | null
+  zone: ZoneInfo | null
 }
