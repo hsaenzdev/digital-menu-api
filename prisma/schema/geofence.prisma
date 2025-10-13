@@ -1,0 +1,25 @@
+model City {
+  id       String @id @default(cuid())
+  name     String @unique
+  country  String
+  state    String?
+  
+  // PostGIS polygon/multipolygon for city boundaries
+  boundary Unsupported("geometry(MultiPolygon, 4326)")
+  
+  // Center point for quick reference and fallback
+  centerPoint Unsupported("geometry(Point, 4326)")?
+  
+  // Operational settings
+  isActive Boolean @default(true)
+  timezone String? // e.g., "America/Mexico_City"
+  
+  // Business hours (JSON)
+  businessHours String? // JSON: {"mon": {"open": "09:00", "close": "22:00"}, ...}
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("cities")
+}
