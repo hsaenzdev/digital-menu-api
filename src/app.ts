@@ -7,6 +7,7 @@ import { ordersManagerPlugin } from "./plugins/orders-manager";
 import { customerPlugin } from "./plugins/customers";
 import { geocodingPlugin } from "./plugins/geocoding";
 import { geofencingPlugin } from "./plugins/geofencing";
+import { zonesManagerPlugin } from "./plugins/zones-manager";
 import { staffPlugin } from "./plugins/staff";
 import { cors } from "@elysiajs/cors";
 import { serverTiming } from "@elysiajs/server-timing";
@@ -30,6 +31,7 @@ const app = new Elysia()
   .use(customerPlugin)
   .use(geocodingPlugin)
   .use(geofencingPlugin)
+  .use(zonesManagerPlugin)
   .use(staffPlugin)
   .listen(PORT);
 
