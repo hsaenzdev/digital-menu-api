@@ -3,6 +3,50 @@ import { prisma } from '../../lib/prisma'
 
 export const customerPlugin = new Elysia({ prefix: '/api/customers' })
   
+  // Get all customers
+  .get('/', async () => {
+    try {
+      const customers = await prisma.customer.findMany({
+        orderBy: { createdAt: 'desc' }
+      })
+
+      // Get order counts for each customer
+      const customersWithStats = await Promise.all(
+        customers.map(async (customer) => {
+          const orderCount = await prisma.order.count({
+            where: customer.platform === 'whatsapp'
+              ? { customerPhone: customer.phoneNumber, platform: 'whatsapp' }
+              : { messengerPsid: customer.messengerPsid, platform: 'messenger' }
+          })
+
+          const totalSpent = await prisma.order.aggregate({
+            where: customer.platform === 'whatsapp'
+              ? { customerPhone: customer.phoneNumber, platform: 'whatsapp' }
+              : { messengerPsid: customer.messengerPsid, platform: 'messenger' },
+            _sum: { total: true }
+          })
+
+          return {
+            ...customer,
+            orderCount,
+            totalSpent: totalSpent._sum.total || 0
+          }
+        })
+      )
+
+      return {
+        success: true,
+        data: customersWithStats
+      }
+    } catch (error) {
+      console.error('Error fetching customers:', error)
+      return {
+        success: false,
+        error: 'Failed to fetch customers'
+      }
+    }
+  })
+  
   // Get customer by ID
   .get('/:customerId', async ({ params }) => {
     try {
@@ -111,6 +155,50 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
       return {
         success: false,
         error: 'Failed to fetch customer orders'
+      }
+    }
+  })
+
+  // Toggle customer active status
+  .patch('/:customerId/toggle-status', async ({ params }) => {
+    try {
+      const { customerId } = params as { customerId: string }
+
+      if (!customerId) {
+        return {
+          success: false,
+          error: 'Customer ID is required'
+        }
+      }
+
+      // Get current status
+      const customer = await prisma.customer.findUnique({
+        where: { id: customerId }
+      })
+
+      if (!customer) {
+        return {
+          success: false,
+          error: 'Customer not found'
+        }
+      }
+
+      // Toggle status
+      const updatedCustomer = await prisma.customer.update({
+        where: { id: customerId },
+        data: { isActive: !customer.isActive }
+      })
+
+      return {
+        success: true,
+        data: updatedCustomer,
+        message: `Customer ${updatedCustomer.isActive ? 'enabled' : 'disabled'}`
+      }
+    } catch (error) {
+      console.error('Error toggling customer status:', error)
+      return {
+        success: false,
+        error: 'Failed to toggle customer status'
       }
     }
   })
