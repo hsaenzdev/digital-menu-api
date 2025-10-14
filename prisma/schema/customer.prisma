@@ -18,5 +18,8 @@ model Customer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Relations
+  orders Order[]
+
   @@map("customers")
 }

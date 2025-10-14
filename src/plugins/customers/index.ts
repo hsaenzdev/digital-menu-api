@@ -13,16 +13,13 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
       // Get order counts for each customer
       const customersWithStats = await Promise.all(
         customers.map(async (customer) => {
+          // Use customerId foreign key relationship for accurate counts
           const orderCount = await prisma.order.count({
-            where: customer.platform === 'whatsapp'
-              ? { customerPhone: customer.phoneNumber, platform: 'whatsapp' }
-              : { messengerPsid: customer.messengerPsid, platform: 'messenger' }
+            where: { customerId: customer.id }
           })
 
           const totalSpent = await prisma.order.aggregate({
-            where: customer.platform === 'whatsapp'
-              ? { customerPhone: customer.phoneNumber, platform: 'whatsapp' }
-              : { messengerPsid: customer.messengerPsid, platform: 'messenger' },
+            where: { customerId: customer.id },
             _sum: { total: true }
           })
 
@@ -135,11 +132,9 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
         }
       }
 
-      // Query orders based on customer's platform
+      // Query orders using the customerId foreign key relationship
       const orders = await prisma.order.findMany({
-        where: customer.platform === 'whatsapp'
-          ? { customerPhone: customer.phoneNumber, platform: 'whatsapp' }
-          : { messengerPsid: customer.messengerPsid, platform: 'messenger' },
+        where: { customerId },
         include: {
           items: true
         },

@@ -21,6 +21,26 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
     try {
       const orderData = body as any
 
+      // Validate customerId is provided
+      if (!orderData.customerId) {
+        return {
+          success: false,
+          error: 'Customer ID is required'
+        }
+      }
+
+      // Validate customer exists
+      const customer = await prisma.customer.findUnique({
+        where: { id: orderData.customerId }
+      })
+
+      if (!customer) {
+        return {
+          success: false,
+          error: 'Invalid customer ID'
+        }
+      }
+
       // Platform-specific validation
       const platform = orderData.platform || 'whatsapp'
       
@@ -41,6 +61,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
       // Create the order (without location first)
       const order = await prisma.order.create({
         data: {
+          customerId: orderData.customerId,
           platform,
           customerPhone: orderData.customerPhone,
           messengerPsid: orderData.messengerPsid,

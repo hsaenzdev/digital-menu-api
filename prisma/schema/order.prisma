@@ -2,6 +2,10 @@ model Order {
   id          String @id @default(cuid())
   orderNumber Int    @unique @default(autoincrement())
 
+  // Customer relationship - required for all orders
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
   // Platform: tracks which platform this order came from
   platform String @default("whatsapp") // 'whatsapp' | 'messenger'
 
@@ -25,6 +29,7 @@ model Order {
 
   items OrderItem[]
 
+  @@index([customerId])
   @@map("orders")
 }
 
