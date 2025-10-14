@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { healthRoutes } from "./plugins/health";
 import { menuPlugin } from "./plugins/menu";
+import { menuManagerPlugin } from "./plugins/menu-manager";
 import { orderPlugin } from "./plugins/orders";
 import { ordersManagerPlugin } from "./plugins/orders-manager";
 import { customerPlugin } from "./plugins/customers";
@@ -23,6 +24,7 @@ const app = new Elysia()
   .use(cors())
   .use(healthRoutes)
   .use(menuPlugin)
+  .use(menuManagerPlugin)
   .use(orderPlugin)
   .use(ordersManagerPlugin)
   .use(customerPlugin)

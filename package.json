@@ -18,6 +18,7 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "elysia": "latest",
+    "file-type": "^21.0.0",
     "prisma": "^6.16.3"
   },
   "devDependencies": {
