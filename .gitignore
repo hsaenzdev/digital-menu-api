@@ -44,3 +44,4 @@ package-lock.json
 /src/generated/prisma
 
 /prisma/migrations
+/public/uploads
