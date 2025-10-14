@@ -1,84 +1,135 @@
 import { Elysia, t } from "elysia";
 
+async function tryGeocodeXyz(lat: number, lon: number): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `https://geocode.xyz/${lat},${lon}?json=1`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    
+    if (data.error || typeof data === 'string') return null;
+
+    const streetNumber = data.stnumber || data.standard?.stnumber;
+    const streetName = data.staddress || data.standard?.addresst;
+    
+    const isValid = (str: any): str is string => {
+      return typeof str === 'string' && 
+             str.length > 0 && 
+             !str.includes('Throttled') &&
+             !str.includes('PO Box')
+    }
+    
+    if (!isValid(streetNumber) || !isValid(streetName)) return null;
+    
+    return `${streetNumber} ${streetName}`;
+  } catch {
+    return null;
+  }
+}
+
+async function tryNominatim(lat: number, lon: number): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+      {
+        signal: AbortSignal.timeout(5000),
+        headers: {
+          'User-Agent': 'DigitalMenuApp/1.0'
+        }
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    if (!data.address) return null;
+
+    const addr = data.address;
+    
+    const hasStreet = addr.road || addr.pedestrian;
+    if (!hasStreet) return null;
+    
+    const addressParts = [];
+    if (addr.house_number) addressParts.push(addr.house_number);
+    if (addr.road) addressParts.push(addr.road);
+    else if (addr.pedestrian) addressParts.push(addr.pedestrian);
+    
+    return addressParts.length > 0 ? addressParts.join(" ") : null;
+  } catch {
+    return null;
+  }
+}
+
+async function tryBigDataCloud(lat: number, lon: number): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    
+    if (!data.localityInfo?.administrative?.[4]?.name) return null;
+    
+    const streetInfo = data.localityInfo.administrative[4].name;
+    
+    if (streetInfo.toLowerCase().includes('street') || 
+        streetInfo.toLowerCase().includes('avenue') ||
+        streetInfo.toLowerCase().includes('road') ||
+        streetInfo.toLowerCase().includes('boulevard') ||
+        streetInfo.toLowerCase().includes('calle') ||
+        streetInfo.toLowerCase().includes('avenida')) {
+      return streetInfo;
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export const geocodingPlugin = new Elysia({ prefix: "/api/geocoding" })
   .get(
     "/reverse",
-    async ({ query, set }) => {
+    async ({ query }) => {
       const { lat, lon } = query;
 
-      try {
-        // Using geocode.xyz for reverse geocoding
-        // Free tier: 1 req/sec throttled for unauthenticated users
-        const response = await fetch(
-          `https://geocode.xyz/${lat},${lon}?json=1`
-        );
+      let address = await tryGeocodeXyz(lat, lon);
+      let source = "geocode.xyz";
 
-        if (!response.ok) {
-          set.status = response.status;
-          return {
-            error: "Failed to fetch address from geocoding service",
-          };
-        }
+      if (!address) {
+        address = await tryNominatim(lat, lon);
+        source = "nominatim";
+      }
 
-        const data = await response.json();
+      if (!address) {
+        address = await tryBigDataCloud(lat, lon);
+        source = "bigdatacloud";
+      }
 
-        // Check for errors
-        if (data.error) {
-          set.status = 400;
-          return {
-            error: data.error.description || "Geocoding failed",
-            suggestion: data.suggestion,
-          };
-        }
-
-        // Build address from geocode.xyz response
-        // geocode.xyz returns data in two possible formats:
-        // 1. data.stnumber, data.staddress, data.city, etc
-        // 2. data.standard.stnumber, data.standard.addresst, data.standard.city, etc
-        const addressParts = [];
-        
-        // Street number and name
-        const streetNumber = data.stnumber || data.standard?.stnumber;
-        const streetName = data.staddress || data.standard?.addresst;
-        
-        if (streetNumber) addressParts.push(streetNumber);
-        if (streetName) addressParts.push(streetName);
-        
-        // City
-        const city = data.city || data.standard?.city;
-        if (city) addressParts.push(city);
-        
-        // State/Province
-        const state = data.prov || data.standard?.prov;
-        if (state) addressParts.push(state);
-        
-        // Postal code
-        const postal = data.postal || data.standard?.postal;
-        if (postal) addressParts.push(postal);
-        
-        // Country
-        const country = data.countryname || data.standard?.countryname;
-
-        const fullAddress = addressParts.join(", ");
-
+      if (!address) {
         return {
-          address: fullAddress || null,
-          street_number: streetNumber || null,
-          street_name: streetName || null,
-          city: city || null,
-          state: state || null,
-          postal_code: postal || null,
-          country: country || null,
-          confidence: data.confidence || data.standard?.confidence || null,
-          raw: data,
-        };
-      } catch (error) {
-        console.error('Geocoding error:', error);
-        set.status = 500;
-        return {
-          error: "Internal server error during geocoding",
+          success: false,
+          address: null,
+          latitude: lat,
+          longitude: lon,
+          message: "Could not determine address. Please enter manually."
         };
       }
+
+      return {
+        success: true,
+        address,
+        latitude: lat,
+        longitude: lon,
+        source
+      };
     },
     {
       query: t.Object({
