@@ -103,15 +103,10 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       }
 
-      // Platform-specific notifications (mock for now)
-      const platformEmoji = platform === 'whatsapp' ? '📱' : '💙'
-      const platformName = platform === 'whatsapp' ? 'WhatsApp' : 'Messenger'
-      console.log(`${platformEmoji} Sending ${platformName} notifications for order #${order.orderNumber}`)
-
       return {
         success: true,
         data: parseOrderData(order),
-        message: `Order #${order.orderNumber} created successfully. ${platformName} notifications sent!`
+        message: `Order #${order.orderNumber} created successfully`
       }
     } catch (error) {
       console.error('Error creating order:', error)
