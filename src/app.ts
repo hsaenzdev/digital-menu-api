@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { healthRoutes } from "./plugins/health";
 import { menuPlugin } from "./plugins/menu";
 import { orderPlugin } from "./plugins/orders";
+import { ordersManagerPlugin } from "./plugins/orders-manager";
 import { customerPlugin } from "./plugins/customers";
 import { geocodingPlugin } from "./plugins/geocoding";
 import { geofencingPlugin } from "./plugins/geofencing";
@@ -23,6 +24,7 @@ const app = new Elysia()
   .use(healthRoutes)
   .use(menuPlugin)
   .use(orderPlugin)
+  .use(ordersManagerPlugin)
   .use(customerPlugin)
   .use(geocodingPlugin)
   .use(geofencingPlugin)
