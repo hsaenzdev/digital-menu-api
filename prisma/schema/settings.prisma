@@ -1,0 +1,67 @@
+model Settings {
+  id String @id @default(uuid())
+
+  restaurantName  String  @default("My Restaurant")
+  description     String?
+  tagline         String?
+  phone           String  @default("")
+  email           String  @default("")
+  address         String?
+  logoUrl         String?
+  coverImageUrl   String?
+  instagramUrl    String?
+  facebookUrl     String?
+  websiteUrl      String?
+
+  businessHours   Json @default("{\"monday\":{\"open\":\"11:00\",\"close\":\"22:00\",\"closed\":false},\"tuesday\":{\"open\":\"11:00\",\"close\":\"22:00\",\"closed\":false},\"wednesday\":{\"open\":\"11:00\",\"close\":\"22:00\",\"closed\":false},\"thursday\":{\"open\":\"11:00\",\"close\":\"22:00\",\"closed\":false},\"friday\":{\"open\":\"11:00\",\"close\":\"22:00\",\"closed\":false},\"saturday\":{\"open\":\"11:00\",\"close\":\"22:00\",\"closed\":false},\"sunday\":{\"open\":\"11:00\",\"close\":\"22:00\",\"closed\":false}}")
+  specialHours    Json @default("[]")
+  leadTimeMinutes Int  @default(30)
+
+  taxRate            Float  @default(0.0)
+  serviceFeeType     String @default("fixed")
+  serviceFeeAmount   Float  @default(0.0)
+  minimumOrderAmount Float  @default(0.0)
+  currencySymbol     String @default("$")
+  currencyCode       String @default("USD")
+  tipSuggestions     Json   @default("[10, 15, 18, 20]")
+
+  baseDeliveryFee             Float  @default(0.0)
+  freeDeliveryThreshold       Float?
+  estimatedDeliveryMinutes    Int    @default(30)
+  estimatedDeliveryMaxMinutes Int    @default(45)
+  maxDeliveryRadiusKm         Float?
+  defaultDeliveryInstructions String?
+
+  autoAcceptOrders          Boolean @default(false)
+  maxOrdersPerHour          Int?
+  cancellationWindowMinutes Int     @default(5)
+  averagePrepTimeMinutes    Int     @default(25)
+  allowSpecialInstructions  Boolean @default(true)
+  requireCustomerPhone      Boolean @default(true)
+  requireCustomerEmail      Boolean @default(false)
+
+  notificationSettings Json @default("{\"newOrder\":{\"email\":true,\"sms\":false,\"whatsapp\":false},\"dailyReport\":{\"email\":true,\"time\":\"09:00\"},\"lowStock\":{\"email\":true},\"customerFeedback\":{\"email\":true}}")
+
+  whatsappEnabled        Boolean @default(false)
+  whatsappPhoneNumber    String?
+  whatsappApiToken       String?
+  whatsappWelcomeMessage String?
+
+  messengerEnabled     Boolean @default(false)
+  messengerPageId      String?
+  messengerAccessToken String?
+  messengerWebhookUrl  String?
+
+  primaryColor     String @default("#3b82f6")
+  secondaryColor   String @default("#10b981")
+  fontFamily       String @default("Inter")
+  theme            String @default("light")
+  menuDisplayStyle String @default("grid")
+
+  twoFactorEnabled Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
