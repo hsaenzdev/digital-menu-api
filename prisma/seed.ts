@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { seedStaff } from './seed-staff'
 
 const prisma = new PrismaClient()
 
@@ -519,6 +520,9 @@ async function seed() {
     }
   }
 
+  // Seed staff members
+  await seedStaff()
+
   console.log('✅ Database seeded successfully!')
   console.log('')
   console.log('📊 Created:')
@@ -527,6 +531,7 @@ async function seed() {
   console.log('- 12 modifiers (sizes, toppings, drink types)')
   console.log('- 7 menu items (4 burgers, 3 fries, 2 beverages)')
   console.log('- 3 sample customers')
+  console.log('- 3 staff members (admin, manager, staff)')
   console.log('- Order numbers starting from 1000')
   console.log('')
   console.log('🍔 Ready to start testing your digital menu!')

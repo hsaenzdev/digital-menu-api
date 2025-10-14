@@ -1,0 +1,26 @@
+// Staff authentication schema for restaurant managers and employees
+
+enum StaffRole {
+  ADMIN    // Full system access
+  MANAGER  // Can manage orders, menu, customers
+  STAFF    // Limited access (orders only)
+}
+
+model Staff {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  pin          String    // Hashed 4-digit PIN
+  role         StaffRole @default(STAFF)
+  firstName    String
+  lastName     String
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Future: link to restaurant when multi-tenant
+  // restaurantId String?
+  // restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
+
+  @@map("staff")
+}
