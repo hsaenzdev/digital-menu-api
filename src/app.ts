@@ -6,7 +6,6 @@ import { orderPlugin } from "./plugins/orders";
 import { ordersManagerPlugin } from "./plugins/orders-manager";
 import { customerPlugin } from "./plugins/customers";
 import { customerLocationsPlugin } from "./plugins/customer-locations";
-import { geocodingPlugin } from "./plugins/geocoding";
 import { geofencingPlugin } from "./plugins/geofencing";
 import { zonesManagerPlugin } from "./plugins/zones-manager";
 import { settingsPlugin } from "./plugins/settings";
@@ -32,7 +31,6 @@ const app = new Elysia()
   .use(ordersManagerPlugin)
   .use(customerPlugin)
   .use(customerLocationsPlugin)
-  .use(geocodingPlugin)
   .use(geofencingPlugin)
   .use(zonesManagerPlugin)
   .use(settingsPlugin)

@@ -21,22 +21,15 @@ import {
 } from '../../lib/location-utils'
 import { prisma } from '../../lib/prisma'
 
-// Geocoding function (placeholder - you can integrate with your geocoding service)
-async function reverseGeocode(latitude: number, longitude: number): Promise<string> {
-  // TODO: Integrate with actual geocoding service (Google Maps, Mapbox, etc.)
-  // For now, return a placeholder address
-  return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-}
-
 export const customerLocationsPlugin = new Elysia({ prefix: '/api/customers/:customerId/locations' })
   /**
    * POST /api/customers/:customerId/locations/resolve
    * Smart location resolution with proximity matching
    * 
    * Algorithm:
-   * 1. Check if location exists within 50m for this customer
+   * 1. Check if location exists within 10m for this customer
    * 2. If found → return existing location, update lastUsedAt
-   * 3. If not → geocode address, create new location, return it
+   * 3. If not → create new location with provided address (or empty if not provided)
    */
   .post(
     '/resolve',
@@ -83,8 +76,8 @@ export const customerLocationsPlugin = new Elysia({ prefix: '/api/customers/:cus
       }
 
       // Step 2: No existing location found - create new one
-      // Use provided address or geocode if not provided
-      const resolvedAddress = address || await reverseGeocode(latitude, longitude)
+      // Use provided address or empty string (customer must fill it manually)
+      const resolvedAddress = address || ''
 
       // Check if this is the customer's first location → make it primary
       const existingLocations = await getCustomerLocations(customerId)
@@ -99,6 +92,16 @@ export const customerLocationsPlugin = new Elysia({ prefix: '/api/customers/:cus
         isPrimary
       )
 
+      // Prepare response message based on whether address was resolved
+      let message = ''
+      if (!resolvedAddress) {
+        message = 'Location saved. Please enter your delivery address.'
+      } else if (isPrimary) {
+        message = 'New location saved as your primary address'
+      } else {
+        message = 'New location saved'
+      }
+
       return {
         success: true,
         location: {
@@ -108,9 +111,7 @@ export const customerLocationsPlugin = new Elysia({ prefix: '/api/customers/:cus
           isPrimary: newLocation!.isPrimary,
           isExisting: false
         },
-        message: isPrimary 
-          ? 'New location saved as your primary address'
-          : 'New location saved'
+        message
       }
     },
     {
@@ -120,7 +121,7 @@ export const customerLocationsPlugin = new Elysia({ prefix: '/api/customers/:cus
       body: t.Object({
         latitude: t.Number(),
         longitude: t.Number(),
-        address: t.Optional(t.String()) // Optional - will geocode if not provided
+        address: t.Optional(t.String()) // Optional - customer can provide or leave empty
       })
     }
   )
