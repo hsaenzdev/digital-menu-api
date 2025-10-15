@@ -74,9 +74,11 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
         }
       }
 
-      // Filter by platform
+      // Filter by platform (via customer relationship)
       if (platform) {
-        where.platform = platform
+        where.customer = {
+          platform: platform
+        }
       }
 
       // Filter by date
@@ -96,6 +98,7 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
       const orders = await prisma.order.findMany({
         where,
         include: {
+          customer: true, // Include customer data (platform, name, etc.)
           items: {
             orderBy: {
               createdAt: 'asc'
@@ -153,6 +156,7 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
       const order = await prisma.order.findUnique({
         where: { id: params.id },
         include: {
+          customer: true, // Include customer data
           items: {
             orderBy: {
               createdAt: 'asc'

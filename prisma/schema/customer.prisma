@@ -5,8 +5,8 @@ model Customer {
   platform String @default("whatsapp") // 'whatsapp' | 'messenger'
 
   // Platform-specific identifiers (only ONE will be set)
-  phoneNumber   String? @unique // For WhatsApp customers
-  messengerPsid String? @unique // For Messenger customers (Page-Scoped ID)
+  whatsappNumber String? @unique // For WhatsApp customers
+  messengerPsid  String? @unique // For Messenger customers (Page-Scoped ID)
 
   name  String?
   email String?

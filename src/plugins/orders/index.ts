@@ -41,31 +41,10 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       }
 
-      // Platform-specific validation
-      const platform = orderData.platform || 'whatsapp'
-      
-      if (platform === 'whatsapp' && !orderData.customerPhone) {
-        return {
-          success: false,
-          error: 'Customer phone is required for WhatsApp orders'
-        }
-      }
-
-      if (platform === 'messenger' && !orderData.messengerPsid) {
-        return {
-          success: false,
-          error: 'Messenger PSID is required for Messenger orders'
-        }
-      }
-
-      // Create the order (without location first)
+      // Create the order
       const order = await prisma.order.create({
         data: {
           customerId: orderData.customerId,
-          platform,
-          customerPhone: orderData.customerPhone,
-          messengerPsid: orderData.messengerPsid,
-          customerName: orderData.customerName,
           address: orderData.address,
           subtotal: orderData.subtotal,
           tax: orderData.tax,
@@ -87,6 +66,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
           }
         },
         include: {
+          customer: true, // Include customer data in response
           items: true
         }
       })
@@ -123,6 +103,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
       const order = await prisma.order.findUnique({
         where: { id: orderId },
         include: {
+          customer: true, // Include customer data
           items: true
         }
       })

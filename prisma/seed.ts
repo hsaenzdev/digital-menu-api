@@ -482,7 +482,7 @@ async function seed() {
   
   const customer1 = await prisma.customer.create({
     data: {
-      phoneNumber: '+1234567890',
+      whatsappNumber: '+1234567890',
       name: 'John Doe',
       email: 'john.doe@email.com',
       isActive: true,
@@ -491,7 +491,7 @@ async function seed() {
 
   const customer2 = await prisma.customer.create({
     data: {
-      phoneNumber: '+1987654321',
+      whatsappNumber: '+1987654321',
       name: 'Jane Smith',
       email: 'jane.smith@email.com',
       isActive: true,
@@ -500,7 +500,7 @@ async function seed() {
 
   const customer3 = await prisma.customer.create({
     data: {
-      phoneNumber: '+1555123456',
+      whatsappNumber: '+1555123456',
       name: 'Mike Johnson',
       email: 'mike.j@email.com',
       isActive: true,
