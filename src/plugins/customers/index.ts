@@ -136,6 +136,8 @@ export const customerPlugin = new Elysia({ prefix: '/api/customers' })
       const orders = await prisma.order.findMany({
         where: { customerId },
         include: {
+          customer: true,
+          customerLocation: true,
           items: true
         },
         orderBy: { createdAt: 'desc' }

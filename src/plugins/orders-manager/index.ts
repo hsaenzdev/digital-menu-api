@@ -99,6 +99,7 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
         where,
         include: {
           customer: true, // Include customer data (platform, name, etc.)
+          customerLocation: true, // Include location data
           items: {
             orderBy: {
               createdAt: 'asc'
@@ -157,6 +158,7 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
         where: { id: params.id },
         include: {
           customer: true, // Include customer data
+          customerLocation: true, // Include location data
           items: {
             orderBy: {
               createdAt: 'asc'
@@ -242,6 +244,8 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
           updatedAt: new Date()
         },
         include: {
+          customer: true,
+          customerLocation: true,
           items: true
         }
       })

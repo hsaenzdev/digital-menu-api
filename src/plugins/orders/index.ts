@@ -29,6 +29,14 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       }
 
+      // Validate customerLocationId is provided
+      if (!orderData.customerLocationId) {
+        return {
+          success: false,
+          error: 'Location ID is required'
+        }
+      }
+
       // Validate customer exists
       const customer = await prisma.customer.findUnique({
         where: { id: orderData.customerId }
@@ -41,11 +49,32 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       }
 
+      // Validate customerLocationId belongs to customer
+      const location = await prisma.customerLocation.findFirst({
+        where: {
+          id: orderData.customerLocationId,
+          customerId: orderData.customerId
+        }
+      })
+
+      if (!location) {
+        return {
+          success: false,
+          error: 'Invalid location ID or location does not belong to customer'
+        }
+      }
+
+      // Update lastUsedAt for the location
+      await prisma.customerLocation.update({
+        where: { id: orderData.customerLocationId },
+        data: { lastUsedAt: new Date() }
+      })
+
       // Create the order
       const order = await prisma.order.create({
         data: {
           customerId: orderData.customerId,
-          address: orderData.address,
+          customerLocationId: orderData.customerLocationId,
           subtotal: orderData.subtotal,
           tax: orderData.tax,
           tip: orderData.tip,
@@ -67,21 +96,10 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         },
         include: {
           customer: true, // Include customer data in response
+          customerLocation: true, // Include location data
           items: true
         }
       })
-
-      // Update location separately if provided (expecting "lat,lon" format)
-      if (orderData.location) {
-        const [lat, lon] = orderData.location.split(',').map((n: string) => parseFloat(n.trim()))
-        if (!isNaN(lat) && !isNaN(lon)) {
-          // Use raw SQL to update PostGIS Point (lon, lat order for PostGIS)
-          await prisma.$executeRawUnsafe(
-            `UPDATE orders SET location = ST_GeomFromText('POINT(${lon} ${lat})', 4326) WHERE id = $1`,
-            order.id
-          )
-        }
-      }
 
       return {
         success: true,
@@ -104,6 +122,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         where: { id: orderId },
         include: {
           customer: true, // Include customer data
+          customerLocation: true, // Include location data
           items: true
         }
       })

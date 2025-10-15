@@ -1,0 +1,28 @@
+// Customer Location Schema
+// Stores delivery addresses with geospatial data for proximity matching
+
+model CustomerLocation {
+  id        String   @id @default(cuid())
+  customerId String
+  customer  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  // Location data
+  address   String   // Human-readable address
+  location  Unsupported("geometry(Point, 4326)") // PostGIS Point (lat, lng)
+  
+  // Metadata
+  label     String?  // e.g., "Home", "Work", "Mom's House"
+  isPrimary Boolean  @default(false) // User's default delivery address
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastUsedAt DateTime @default(now()) // Track usage for sorting/cleanup
+  
+  // Relations
+  orders    Order[]
+  
+  @@index([customerId])
+  @@index([location], type: Gist) // Spatial index for proximity queries
+  @@map("customer_locations")
+}

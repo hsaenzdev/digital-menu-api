@@ -11,6 +11,7 @@ async function seed() {
   await prisma.itemModifierGroup.deleteMany()
   await prisma.orderItem.deleteMany()
   await prisma.order.deleteMany()
+  await prisma.customerLocation.deleteMany()
   await prisma.customer.deleteMany()
   await prisma.modifier.deleteMany()
   await prisma.modifierGroup.deleteMany()
@@ -507,6 +508,74 @@ async function seed() {
     },
   })
 
+  // Create Sample Customer Locations
+  console.log('📍 Creating sample customer locations...')
+  
+  // John Doe's locations
+  const johnHome = await prisma.$executeRaw`
+    INSERT INTO customer_locations (id, "customerId", location, address, label, "isPrimary", "createdAt", "updatedAt", "lastUsedAt")
+    VALUES (
+      gen_random_uuid()::text,
+      ${customer1.id}::text,
+      ST_SetSRID(ST_MakePoint(-118.2437, 34.0522), 4326), -- Los Angeles, CA
+      '123 Main St, Los Angeles, CA 90001',
+      'Home',
+      true,
+      NOW(),
+      NOW(),
+      NOW()
+    )
+  `
+
+  const johnWork = await prisma.$executeRaw`
+    INSERT INTO customer_locations (id, "customerId", location, address, label, "isPrimary", "createdAt", "updatedAt", "lastUsedAt")
+    VALUES (
+      gen_random_uuid()::text,
+      ${customer1.id}::text,
+      ST_SetSRID(ST_MakePoint(-118.2500, 34.0600), 4326), -- Downtown LA
+      '456 Office Blvd, Los Angeles, CA 90013',
+      'Work',
+      false,
+      NOW(),
+      NOW(),
+      NOW()
+    )
+  `
+
+  // Jane Smith's location
+  const janeHome = await prisma.$executeRaw`
+    INSERT INTO customer_locations (id, "customerId", location, address, label, "isPrimary", "createdAt", "updatedAt", "lastUsedAt")
+    VALUES (
+      gen_random_uuid()::text,
+      ${customer2.id}::text,
+      ST_SetSRID(ST_MakePoint(-118.3000, 34.1000), 4326), -- Santa Monica
+      '789 Beach Ave, Santa Monica, CA 90401',
+      'Home',
+      true,
+      NOW(),
+      NOW(),
+      NOW()
+    )
+  `
+
+  // Mike Johnson's location
+  const mikeHome = await prisma.$executeRaw`
+    INSERT INTO customer_locations (id, "customerId", location, address, label, "isPrimary", "createdAt", "updatedAt", "lastUsedAt")
+    VALUES (
+      gen_random_uuid()::text,
+      ${customer3.id}::text,
+      ST_SetSRID(ST_MakePoint(-118.4000, 34.0200), 4326), -- Culver City
+      '321 Sunset Dr, Culver City, CA 90230',
+      'Home',
+      true,
+      NOW(),
+      NOW(),
+      NOW()
+    )
+  `
+
+  console.log('   Created 4 sample customer locations')
+
   // Set auto-increment for order numbers to start from 1000
   console.log('🔢 Setting order numbers to start from 1000...')
   try {
@@ -531,6 +600,7 @@ async function seed() {
   console.log('- 12 modifiers (sizes, toppings, drink types)')
   console.log('- 7 menu items (4 burgers, 3 fries, 2 beverages)')
   console.log('- 3 sample customers')
+  console.log('- 4 customer locations (2 for John, 1 for Jane, 1 for Mike)')
   console.log('- 3 staff members (admin, manager, staff)')
   console.log('- Order numbers starting from 1000')
   console.log('')

@@ -6,8 +6,9 @@ model Order {
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  location Unsupported("geometry(Point, 4326)")?
-  address  String? // Reverse geocoded address for display
+  // Location relationship - required for all orders
+  customerLocationId String
+  customerLocation   CustomerLocation @relation(fields: [customerLocationId], references: [id], onDelete: Restrict)
 
   total    Float
   subtotal Float
@@ -21,6 +22,7 @@ model Order {
   items OrderItem[]
 
   @@index([customerId])
+  @@index([customerLocationId])
   @@map("orders")
 }
 
