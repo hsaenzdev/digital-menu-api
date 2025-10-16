@@ -10,6 +10,7 @@ import { geofencingPlugin } from "./plugins/geofencing";
 import { zonesManagerPlugin } from "./plugins/zones-manager";
 import { settingsPlugin } from "./plugins/settings";
 import { staffPlugin } from "./plugins/staff";
+import { businessValidation } from "./plugins/business-validation";
 import { cors } from "@elysiajs/cors";
 import { serverTiming } from "@elysiajs/server-timing";
 import { staticPlugin } from "@elysiajs/static";
@@ -35,6 +36,7 @@ const app = new Elysia()
   .use(zonesManagerPlugin)
   .use(settingsPlugin)
   .use(staffPlugin)
+  .use(businessValidation)
   .listen(PORT);
 
 console.log(
