@@ -9,24 +9,8 @@ import { bearer } from '@elysiajs/bearer'
 import { prisma } from '../../lib/prisma'
 import { jwtConfig, type StaffTokenPayload } from '../../lib/auth'
 import { isValidTransition, getActiveStatuses, isTerminalStatus } from './status-validation'
-
-/**
- * Helper function to parse order data from database format to API format
- * Converts selectedModifiers from JSON string to parsed array
- * @param order - Raw order object from database
- * @returns Order with parsed selectedModifiers
- */
-const parseOrderData = (order: any) => {
-  return {
-    ...order,
-    items: order.items.map((item: any) => ({
-      ...item,
-      selectedModifiers: item.selectedModifiers 
-        ? JSON.parse(item.selectedModifiers) 
-        : []
-    }))
-  }
-}
+import { parseOrderData } from '../../lib/response-transformers'
+import { verifyStaffAuth } from '../../lib/auth-validation'
 
 export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
   .use(jwt(jwtConfig))
@@ -47,15 +31,9 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
     '/orders',
     async ({ query, jwt, bearer, set }) => {
       // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       // Build filters
@@ -143,15 +121,9 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
     '/orders/:id',
     async ({ params, jwt, bearer, set }) => {
       // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       const order = await prisma.order.findUnique({
@@ -195,15 +167,9 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
     '/orders/:id/status',
     async ({ params, body, jwt, bearer, set }) => {
       // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       const { status, note } = body
@@ -276,15 +242,9 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
     '/orders/:id/confirm-payment',
     async ({ params, jwt, bearer, set }) => {
       // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       // Get current order
@@ -328,7 +288,7 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
         data: {
           paymentStatus: 'confirmed',
           transferConfirmedAt: new Date(),
-          transferConfirmedBy: payload.staffId,
+          transferConfirmedBy: auth.payload.staffId,
           status: 'pending', // Move to pending so restaurant can accept
           updatedAt: new Date()
         },
@@ -359,16 +319,9 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
   .patch(
     '/orders/:id/reject-payment',
     async ({ params, body, jwt, bearer, set }) => {
-      // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       const { reason } = body || {}
@@ -438,16 +391,9 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
   .get(
     '/stats',
     async ({ jwt, bearer, set }) => {
-      // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       // Get counts by status

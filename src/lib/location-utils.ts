@@ -190,27 +190,4 @@ export async function getCustomerLocations(customerId: string) {
   })
 }
 
-/**
- * Calculate distance between two points in meters
- * 
- * @param lat1 - Latitude of first point
- * @param lon1 - Longitude of first point
- * @param lat2 - Latitude of second point
- * @param lon2 - Longitude of second point
- * @returns Distance in meters
- */
-export async function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): Promise<number> {
-  const result = await prisma.$queryRaw<Array<{ distance: number }>>`
-    SELECT ST_Distance(
-      ST_SetSRID(ST_MakePoint(${lon1}, ${lat1}), 4326)::geography,
-      ST_SetSRID(ST_MakePoint(${lon2}, ${lat2}), 4326)::geography
-    ) as distance
-  `
 
-  return result[0].distance
-}

@@ -1,18 +1,6 @@
 import { Elysia } from 'elysia'
 import { prisma } from '../../lib/prisma'
-
-// Helper function to parse selectedModifiers JSON string to array
-const parseOrderData = (order: any) => {
-  return {
-    ...order,
-    items: order.items.map((item: any) => ({
-      ...item,
-      selectedModifiers: item.selectedModifiers 
-        ? JSON.parse(item.selectedModifiers) 
-        : []
-    }))
-  }
-}
+import { parseOrderData } from '../../lib/response-transformers'
 
 export const orderPlugin = new Elysia({ prefix: '/api/orders' })
   

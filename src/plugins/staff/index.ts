@@ -8,6 +8,7 @@ import { jwt } from '@elysiajs/jwt'
 import { bearer } from '@elysiajs/bearer'
 import { prisma } from '../../lib/prisma'
 import { verifyPin, jwtConfig, type StaffTokenPayload } from '../../lib/auth'
+import { verifyStaffAuth } from '../../lib/auth-validation'
 
 export const staffPlugin = new Elysia({ prefix: '/api/staff' })
   .use(jwt(jwtConfig))
@@ -93,50 +94,43 @@ export const staffPlugin = new Elysia({ prefix: '/api/staff' })
    * Get current authenticated staff member's information
    * Requires: Bearer token in Authorization header
    */
-  .get(
+    .get(
     '/me',
     async ({ jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
         return {
           success: false,
-          error: 'Authorization token required'
+          error: auth.error
         }
       }
 
-      // Verify token
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return {
-          success: false,
-          error: 'Invalid or expired token'
-        }
-      }
-
-      // Get staff from database
+      // Get staff data
       const staff = await prisma.staff.findUnique({
-        where: { id: payload.staffId }
+        where: { id: auth.payload.staffId },
+        select: {
+          id: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true
+        }
       })
 
-      if (!staff || !staff.isActive) {
+      if (!staff) {
         set.status = 404
         return {
           success: false,
-          error: 'Staff member not found or inactive'
+          error: 'Staff not found'
         }
       }
 
       return {
         success: true,
-        staff: {
-          id: staff.id,
-          username: staff.username,
-          firstName: staff.firstName,
-          lastName: staff.lastName,
-          role: staff.role,
-          lastLoginAt: staff.lastLoginAt
-        }
+        staff
       }
     }
   )
@@ -149,26 +143,16 @@ export const staffPlugin = new Elysia({ prefix: '/api/staff' })
   .get(
     '/list',
     async ({ jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
         return {
           success: false,
-          error: 'Authorization token required'
-        }
-      }
-
-      // Verify token
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return {
-          success: false,
-          error: 'Invalid or expired token'
+          error: auth.error
         }
       }
 
       // Check if user is admin
-      if (payload.role !== 'ADMIN') {
+      if (auth.payload.role !== 'ADMIN') {
         set.status = 403
         return {
           success: false,

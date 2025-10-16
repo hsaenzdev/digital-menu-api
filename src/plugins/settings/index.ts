@@ -3,6 +3,7 @@ import { jwt } from '@elysiajs/jwt'
 import { bearer } from '@elysiajs/bearer'
 import { prisma } from '../../lib/prisma'
 import { jwtConfig, type StaffTokenPayload } from '../../lib/auth'
+import { verifyStaffAuth } from '../../lib/auth-validation'
 
 export const settingsPlugin = new Elysia({ prefix: '/api/settings' })
   .use(jwt(jwtConfig))
@@ -44,15 +45,9 @@ export const settingsPlugin = new Elysia({ prefix: '/api/settings' })
   .get(
     '/',
     async ({ jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { error: auth.error }
       }
 
       try {
@@ -121,15 +116,9 @@ export const settingsPlugin = new Elysia({ prefix: '/api/settings' })
   .patch(
     '/',
     async ({ jwt, bearer, set, body }) => {
-      if (!bearer) {
-        set.status = 401
-        return { error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { error: auth.error }
       }
 
       try {

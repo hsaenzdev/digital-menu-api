@@ -309,21 +309,3 @@ export async function isRestaurantOpen(): Promise<RestaurantStatus> {
     throw error
   }
 }
-
-/**
- * Get business hours for the week
- */
-export async function getBusinessHours(): Promise<BusinessHours> {
-  try {
-    const settings = await prisma.settings.findFirst()
-
-    if (!settings) {
-      throw new Error('Settings not found')
-    }
-
-    return settings.businessHours as unknown as BusinessHours
-  } catch (error) {
-    console.error('Error fetching business hours:', error)
-    throw error
-  }
-}

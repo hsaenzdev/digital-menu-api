@@ -8,6 +8,7 @@ import { jwt } from '@elysiajs/jwt'
 import { bearer } from '@elysiajs/bearer'
 import { prisma } from '../../lib/prisma'
 import { jwtConfig, type StaffTokenPayload } from '../../lib/auth'
+import { verifyStaffAuth } from '../../lib/auth-validation'
 
 export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .use(jwt(jwtConfig))
@@ -24,15 +25,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .post(
     '/categories',
     async ({ body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       const { name, description, displayOrder, isActive } = body
@@ -74,15 +69,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .patch(
     '/categories/:id',
     async ({ params, body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -118,15 +107,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .delete(
     '/categories/:id',
     async ({ params, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -160,15 +143,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .get(
     '/modifier-groups',
     async ({ jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -200,15 +177,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .post(
     '/modifier-groups',
     async ({ body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -246,15 +217,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .patch(
     '/modifier-groups/:id',
     async ({ params, body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -293,15 +258,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .delete(
     '/modifier-groups/:id',
     async ({ params, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -333,15 +292,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .post(
     '/modifiers',
     async ({ body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -377,15 +330,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .patch(
     '/modifiers/:id',
     async ({ params, body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -421,15 +368,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .delete(
     '/modifiers/:id',
     async ({ params, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -460,15 +401,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .get(
     '/items',
     async ({ query, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -520,15 +455,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .post(
     '/items',
     async ({ body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -576,15 +505,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .patch(
     '/items/:id',
     async ({ params, body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -633,15 +556,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .delete(
     '/items/:id',
     async ({ params, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -669,15 +586,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .patch(
     '/items/:id/availability',
     async ({ params, body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -714,15 +625,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .post(
     '/items/:id/modifier-groups',
     async ({ params, body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -757,15 +662,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .delete(
     '/items/:id/modifier-groups/:groupId',
     async ({ params, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -799,15 +698,9 @@ export const menuManagerPlugin = new Elysia({ prefix: '/api/menu-manager' })
   .post(
     '/upload',
     async ({ body, jwt, bearer, set }) => {
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {

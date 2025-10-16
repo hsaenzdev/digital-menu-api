@@ -3,6 +3,7 @@ import { jwt } from '@elysiajs/jwt'
 import { bearer } from '@elysiajs/bearer'
 import { prisma } from '../../lib/prisma'
 import { jwtConfig, type StaffTokenPayload } from '../../lib/auth'
+import { verifyStaffAuth } from '../../lib/auth-validation'
 
 export const zonesManagerPlugin = new Elysia({ prefix: '/api/zones-manager' })
   .use(jwt(jwtConfig))
@@ -18,16 +19,9 @@ export const zonesManagerPlugin = new Elysia({ prefix: '/api/zones-manager' })
   .get(
     '/zones',
     async ({ jwt, bearer, set }) => {
-      // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -70,16 +64,9 @@ export const zonesManagerPlugin = new Elysia({ prefix: '/api/zones-manager' })
   .post(
     '/zones',
     async ({ jwt, bearer, set, body }) => {
-      // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -181,16 +168,9 @@ export const zonesManagerPlugin = new Elysia({ prefix: '/api/zones-manager' })
   .patch(
     '/zones/:id',
     async ({ jwt, bearer, set, params, body }) => {
-      // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -312,16 +292,9 @@ export const zonesManagerPlugin = new Elysia({ prefix: '/api/zones-manager' })
   .patch(
     '/zones/:id/toggle',
     async ({ jwt, bearer, set, params }) => {
-      // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -378,16 +351,9 @@ export const zonesManagerPlugin = new Elysia({ prefix: '/api/zones-manager' })
   .delete(
     '/zones/:id',
     async ({ jwt, bearer, set, params }) => {
-      // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
@@ -481,16 +447,9 @@ export const zonesManagerPlugin = new Elysia({ prefix: '/api/zones-manager' })
   .post(
     '/test-location',
     async ({ jwt, bearer, set, body }) => {
-      // Verify authentication
-      if (!bearer) {
-        set.status = 401
-        return { success: false, error: 'Authentication required' }
-      }
-
-      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
-      if (!payload) {
-        set.status = 401
-        return { success: false, error: 'Invalid or expired token' }
+      const auth = await verifyStaffAuth(jwt, bearer, set)
+      if (!auth.success) {
+        return { success: false, error: auth.error }
       }
 
       try {
