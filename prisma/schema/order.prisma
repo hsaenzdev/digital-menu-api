@@ -15,7 +15,14 @@ model Order {
   tax      Float @default(0)
   tip      Float @default(0)
 
-  status    String   @default("pending") // pending, confirmed, preparing, ready, delivered, cancelled
+  // Payment fields
+  paymentMethod       String    @default("cash") // 'cash' | 'bank_transfer'
+  paymentStatus       String    @default("pending") // 'pending' | 'confirmed' | 'failed'
+  transferReference   String?   // Customer's reference/transaction number
+  transferConfirmedAt DateTime?
+  transferConfirmedBy String?   // Staff member ID who confirmed
+
+  status    String   @default("pending") // pending, pending_payment, confirmed, preparing, ready, delivered, cancelled
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

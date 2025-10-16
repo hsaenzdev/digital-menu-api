@@ -3,13 +3,14 @@
  * Ensures orders follow the correct workflow
  */
 
-export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
+export type OrderStatus = 'pending_payment' | 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
 
 /**
  * Valid status transitions
  * Maps current status to allowed next statuses
  */
 const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pending_payment: ['pending', 'cancelled'], // Payment confirmed → pending, or cancelled
   pending: ['confirmed', 'cancelled'],
   confirmed: ['preparing', 'cancelled'],
   preparing: ['ready', 'cancelled'],
@@ -47,7 +48,7 @@ export function isTerminalStatus(status: string): boolean {
  * Get all active order statuses (not terminal)
  */
 export function getActiveStatuses(): OrderStatus[] {
-  return ['pending', 'confirmed', 'preparing', 'ready']
+  return ['pending_payment', 'pending', 'confirmed', 'preparing', 'ready']
 }
 
 /**
@@ -55,6 +56,7 @@ export function getActiveStatuses(): OrderStatus[] {
  */
 export function getStatusColor(status: string): string {
   const colors: Record<OrderStatus, string> = {
+    pending_payment: 'orange',
     pending: 'yellow',
     confirmed: 'blue',
     preparing: 'purple',
@@ -70,6 +72,7 @@ export function getStatusColor(status: string): string {
  */
 export function getStatusLabel(status: string): string {
   const labels: Record<OrderStatus, string> = {
+    pending_payment: 'Awaiting Payment',
     pending: 'New Order',
     confirmed: 'Confirmed',
     preparing: 'In Kitchen',

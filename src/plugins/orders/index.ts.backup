@@ -83,6 +83,14 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         // Bank transfer orders need payment confirmation first
         paymentStatus = 'pending'
         orderStatus = 'pending_payment' // Waiting for payment confirmation
+        
+        // Validate transfer reference is provided
+        if (!orderData.transferReference || !orderData.transferReference.trim()) {
+          return {
+            success: false,
+            error: 'Transfer reference is required for bank transfer payments'
+          }
+        }
       }
 
       // Create the order
@@ -96,6 +104,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
           total: orderData.total,
           paymentMethod,
           paymentStatus,
+          transferReference: orderData.transferReference || null,
           status: orderStatus,
           items: {
             create: orderData.items.map((item: any) => ({
@@ -119,24 +128,10 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
         }
       })
 
-      // For bank transfers, set the transfer reference to the order number
-      let finalOrder = order
-      if (paymentMethod === 'bank_transfer') {
-        finalOrder = await prisma.order.update({
-          where: { id: order.id },
-          data: { transferReference: `ORD-${order.orderNumber}` },
-          include: {
-            customer: true,
-            customerLocation: true,
-            items: true
-          }
-        })
-      }
-
       return {
         success: true,
-        data: parseOrderData(finalOrder),
-        message: `Order #${finalOrder.orderNumber} created successfully`
+        data: parseOrderData(order),
+        message: `Order #${order.orderNumber} created successfully`
       }
     } catch (error) {
       console.error('Error creating order:', error)
@@ -147,7 +142,56 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
     }
   })
 
-  // Get order by ID
+  // Cancel order (customer-initiated)
+  .patch('/:orderId/cancel', async ({ params: { orderId } }) => {
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId }
+      })
+
+      if (!order) {
+        return {
+          success: false,
+          error: 'Order not found'
+        }
+      }
+
+      // Only allow cancellation if order is in cancellable state
+      const cancellableStatuses = ['pending_payment', 'pending']
+      if (!cancellableStatuses.includes(order.status)) {
+        return {
+          success: false,
+          error: `Cannot cancel order with status '${order.status}'`
+        }
+      }
+
+      const updatedOrder = await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'cancelled',
+          updatedAt: new Date()
+        },
+        include: {
+          customer: true,
+          customerLocation: true,
+          items: true
+        }
+      })
+
+      return {
+        success: true,
+        data: parseOrderData(updatedOrder),
+        message: 'Order cancelled successfully'
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error)
+      return {
+        success: false,
+        error: 'Failed to cancel order'
+      }
+    }
+  })
+```  // Get order by ID
   .get('/:orderId', async ({ params: { orderId } }) => {
     try {
       const order = await prisma.order.findUnique({
@@ -198,7 +242,7 @@ export const orderPlugin = new Elysia({ prefix: '/api/orders' })
       if (!cancellableStatuses.includes(order.status)) {
         return {
           success: false,
-          error: "Cannot cancel order with status '" + order.status + "'"
+          error: `Cannot cancel order with status '${order.status}'`
         }
       }
 

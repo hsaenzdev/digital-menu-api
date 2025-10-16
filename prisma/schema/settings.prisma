@@ -40,6 +40,13 @@ model Settings {
   requireCustomerPhone      Boolean @default(true)
   requireCustomerEmail      Boolean @default(false)
 
+  // Payment settings
+  bankTransferEnabled       Boolean @default(true)
+  bankName                  String  @default("Bank Name")
+  bankAccountNumber         String  @default("")
+  bankAccountHolder         String  @default("Restaurant Legal Name")
+  bankTransferInstructions  String  @default("Please use your order number as reference. We'll confirm your payment within 15 minutes during business hours.")
+
   notificationSettings Json @default("{\"newOrder\":{\"email\":true,\"sms\":false,\"whatsapp\":false},\"dailyReport\":{\"email\":true,\"time\":\"09:00\"},\"lowStock\":{\"email\":true},\"customerFeedback\":{\"email\":true}}")
 
   whatsappEnabled        Boolean @default(false)

@@ -8,6 +8,39 @@ export const settingsPlugin = new Elysia({ prefix: '/api/settings' })
   .use(jwt(jwtConfig))
   .use(bearer())
 
+  // Public endpoint for bank transfer settings (no auth required)
+  .get(
+    '/public/bank-transfer',
+    async ({ set }) => {
+      try {
+        const settings = await prisma.settings.findFirst()
+
+        if (!settings) {
+          // Return defaults if no settings found
+          return {
+            bankTransferEnabled: false,
+            bankName: '',
+            bankAccountNumber: '',
+            bankAccountHolder: '',
+            bankTransferInstructions: ''
+          }
+        }
+
+        // Only return public bank transfer information
+        return {
+          bankTransferEnabled: settings.bankTransferEnabled ?? false,
+          bankName: settings.bankName || '',
+          bankAccountNumber: settings.bankAccountNumber || '',
+          bankAccountHolder: settings.bankAccountHolder || '',
+          bankTransferInstructions: settings.bankTransferInstructions || ''
+        }
+      } catch (error) {
+        set.status = 500
+        return { error: 'Failed to fetch bank settings' }
+      }
+    }
+  )
+
   .get(
     '/',
     async ({ jwt, bearer, set }) => {

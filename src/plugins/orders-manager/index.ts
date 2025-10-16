@@ -265,6 +265,170 @@ export const ordersManagerPlugin = new Elysia({ prefix: '/api/orders-manager' })
   )
 
   /**
+   * PATCH /api/orders-manager/orders/:id/confirm-payment
+   * Confirm bank transfer payment for an order
+   * 
+   * @authentication Bearer token (staff)
+   * @param id - Order ID
+   * @returns Updated order with confirmed payment
+   */
+  .patch(
+    '/orders/:id/confirm-payment',
+    async ({ params, jwt, bearer, set }) => {
+      // Verify authentication
+      if (!bearer) {
+        set.status = 401
+        return { success: false, error: 'Authentication required' }
+      }
+
+      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
+      if (!payload) {
+        set.status = 401
+        return { success: false, error: 'Invalid or expired token' }
+      }
+
+      // Get current order
+      const order = await prisma.order.findUnique({
+        where: { id: params.id }
+      })
+
+      if (!order) {
+        set.status = 404
+        return { success: false, error: 'Order not found' }
+      }
+
+      // Validate order is awaiting payment
+      if (order.paymentMethod !== 'bank_transfer') {
+        set.status = 400
+        return {
+          success: false,
+          error: 'This order does not use bank transfer payment'
+        }
+      }
+
+      if (order.paymentStatus === 'confirmed') {
+        set.status = 400
+        return {
+          success: false,
+          error: 'Payment already confirmed'
+        }
+      }
+
+      if (order.status !== 'pending_payment') {
+        set.status = 400
+        return {
+          success: false,
+          error: `Cannot confirm payment for order with status '${order.status}'`
+        }
+      }
+
+      // Update order payment status
+      const updatedOrder = await prisma.order.update({
+        where: { id: params.id },
+        data: {
+          paymentStatus: 'confirmed',
+          transferConfirmedAt: new Date(),
+          transferConfirmedBy: payload.staffId,
+          status: 'pending', // Move to pending so restaurant can accept
+          updatedAt: new Date()
+        },
+        include: {
+          customer: true,
+          customerLocation: true,
+          items: true
+        }
+      })
+
+      return {
+        success: true,
+        message: `Payment confirmed for order #${order.orderNumber}`,
+        order: parseOrderData(updatedOrder)
+      }
+    }
+  )
+
+  /**
+   * PATCH /api/orders-manager/orders/:id/reject-payment
+   * Reject bank transfer payment and cancel order
+   * 
+   * @authentication Bearer token (staff)
+   * @param id - Order ID
+   * @body reason - Optional reason for rejection
+   * @returns Cancelled order
+   */
+  .patch(
+    '/orders/:id/reject-payment',
+    async ({ params, body, jwt, bearer, set }) => {
+      // Verify authentication
+      if (!bearer) {
+        set.status = 401
+        return { success: false, error: 'Authentication required' }
+      }
+
+      const payload = await jwt.verify(bearer) as StaffTokenPayload | false
+      if (!payload) {
+        set.status = 401
+        return { success: false, error: 'Invalid or expired token' }
+      }
+
+      const { reason } = body || {}
+
+      // Get current order
+      const order = await prisma.order.findUnique({
+        where: { id: params.id }
+      })
+
+      if (!order) {
+        set.status = 404
+        return { success: false, error: 'Order not found' }
+      }
+
+      // Validate order is awaiting payment
+      if (order.paymentMethod !== 'bank_transfer') {
+        set.status = 400
+        return {
+          success: false,
+          error: 'This order does not use bank transfer payment'
+        }
+      }
+
+      if (order.paymentStatus === 'confirmed') {
+        set.status = 400
+        return {
+          success: false,
+          error: 'Cannot reject already confirmed payment'
+        }
+      }
+
+      // Update order - mark payment as failed and cancel order
+      const updatedOrder = await prisma.order.update({
+        where: { id: params.id },
+        data: {
+          paymentStatus: 'failed',
+          status: 'cancelled',
+          updatedAt: new Date()
+        },
+        include: {
+          customer: true,
+          customerLocation: true,
+          items: true
+        }
+      })
+
+      return {
+        success: true,
+        message: reason || `Payment rejected for order #${order.orderNumber}`,
+        order: parseOrderData(updatedOrder)
+      }
+    },
+    {
+      body: t.Optional(t.Object({
+        reason: t.Optional(t.String())
+      }))
+    }
+  )
+
+  /**
    * GET /api/orders-manager/stats
    * Get order statistics for dashboard analytics
    * 
