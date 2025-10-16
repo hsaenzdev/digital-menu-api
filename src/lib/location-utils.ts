@@ -12,7 +12,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 // Default proximity threshold: 10 meters (allows for GPS variance while preventing duplicates)
-export const PROXIMITY_THRESHOLD_METERS = 5
+export const PROXIMITY_THRESHOLD_METERS = 10
 
 /**
  * Find customer locations within proximity threshold of given coordinates
