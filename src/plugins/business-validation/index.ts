@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
-import { isRestaurantOpen, getBusinessHours } from './hours-validation'
+import { isRestaurantOpen } from './hours-validation'
 import { validateCustomerStatus } from './customer-validation'
-import type { ValidationResponse, RestaurantStatus, BusinessHours, CustomerStatusValidation } from './types'
+import type { ValidationResponse, RestaurantStatus, CustomerStatusValidation } from './types'
 
 export const businessValidation = new Elysia({ prefix: '/api/business' })
   /**
@@ -20,26 +20,6 @@ export const businessValidation = new Elysia({ prefix: '/api/business' })
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to check restaurant status'
-      }
-    }
-  })
-
-  /**
-   * GET /api/business/hours
-   * Get weekly business hours schedule
-   */
-  .get('/hours', async (): Promise<ValidationResponse<BusinessHours>> => {
-    try {
-      const hours = await getBusinessHours()
-      return {
-        success: true,
-        data: hours
-      }
-    } catch (error) {
-      console.error('Error fetching business hours:', error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch business hours'
       }
     }
   })
