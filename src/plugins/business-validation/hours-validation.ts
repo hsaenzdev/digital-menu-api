@@ -84,8 +84,63 @@ function getNextOpeningTime(businessHours: BusinessHours, specialHours: SpecialH
   const days: Array<keyof BusinessHours> = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
   const now = new Date()
   const currentDay = now.getDay()
+  const currentTime = getCurrentTime()
 
-  // Check next 7 days
+  // First check if we open later TODAY
+  const todayName = days[currentDay]
+  const todayDate = getCurrentDate()
+  
+  // Check special hours for today
+  const specialToday = specialHours.find(sh => sh.date === todayDate)
+  if (specialToday && !specialToday.closed && specialToday.open) {
+    const openTime = timeToMinutes(specialToday.open)
+    const nowTime = timeToMinutes(currentTime)
+    
+    // If opening time is later today
+    if (openTime > nowTime) {
+      const openingDateTime = new Date(now)
+      const [hours, minutes] = specialToday.open.split(':').map(Number)
+      openingDateTime.setHours(hours, minutes, 0, 0)
+
+      const hoursUntil = Math.floor((openingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60))
+      const minutesUntil = Math.floor((openingDateTime.getTime() - now.getTime()) / (1000 * 60)) % 60
+
+      return {
+        day: 'Today',
+        date: todayDate,
+        time: specialToday.open,
+        hoursUntil,
+        minutesUntil
+      }
+    }
+  } else if (!specialToday) {
+    // Check regular business hours for today
+    const todayHours = businessHours[todayName]
+    if (!todayHours.closed) {
+      const openTime = timeToMinutes(todayHours.open)
+      const nowTime = timeToMinutes(currentTime)
+      
+      // If opening time is later today
+      if (openTime > nowTime) {
+        const openingDateTime = new Date(now)
+        const [hours, minutes] = todayHours.open.split(':').map(Number)
+        openingDateTime.setHours(hours, minutes, 0, 0)
+
+        const hoursUntil = Math.floor((openingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60))
+        const minutesUntil = Math.floor((openingDateTime.getTime() - now.getTime()) / (1000 * 60)) % 60
+
+        return {
+          day: 'Today',
+          date: todayDate,
+          time: todayHours.open,
+          hoursUntil,
+          minutesUntil
+        }
+      }
+    }
+  }
+
+  // Check next 7 days (starting from tomorrow)
   for (let i = 1; i <= 7; i++) {
     const checkDate = new Date(now)
     checkDate.setDate(checkDate.getDate() + i)
@@ -94,6 +149,9 @@ function getNextOpeningTime(businessHours: BusinessHours, specialHours: SpecialH
     const dayIndex = checkDate.getDay()
     const dayName = days[dayIndex]
     const dateString = checkDate.toISOString().split('T')[0]
+    
+    // Use "Tomorrow" for next day, day name for others
+    const displayDay = i === 1 ? 'Tomorrow' : dayName.charAt(0).toUpperCase() + dayName.slice(1)
 
     // Check if there's a special hours for this date
     const specialDay = specialHours.find(sh => sh.date === dateString)
@@ -108,7 +166,7 @@ function getNextOpeningTime(businessHours: BusinessHours, specialHours: SpecialH
         const minutesUntil = Math.floor((openingDateTime.getTime() - now.getTime()) / (1000 * 60)) % 60
 
         return {
-          day: dayName.charAt(0).toUpperCase() + dayName.slice(1),
+          day: displayDay,
           date: dateString,
           time: specialDay.open,
           hoursUntil,
@@ -126,7 +184,7 @@ function getNextOpeningTime(businessHours: BusinessHours, specialHours: SpecialH
         const minutesUntil = Math.floor((openingDateTime.getTime() - now.getTime()) / (1000 * 60)) % 60
 
         return {
-          day: dayName.charAt(0).toUpperCase() + dayName.slice(1),
+          day: displayDay,
           date: dateString,
           time: dayHours.open,
           hoursUntil,
