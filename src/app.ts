@@ -11,6 +11,7 @@ import { zonesManagerPlugin } from "./plugins/zones-manager";
 import { settingsPlugin } from "./plugins/settings";
 import { staffPlugin } from "./plugins/staff";
 import { businessValidation } from "./plugins/business-validation";
+import { messengerWebhookPlugin } from "./plugins/webhooks-messenger";
 import { cors } from "@elysiajs/cors";
 import { serverTiming } from "@elysiajs/server-timing";
 import { staticPlugin } from "@elysiajs/static";
@@ -37,6 +38,7 @@ const app = new Elysia()
   .use(settingsPlugin)
   .use(staffPlugin)
   .use(businessValidation)
+  .use(messengerWebhookPlugin)
   .listen(PORT);
 
 console.log(
